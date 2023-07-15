@@ -27,44 +27,48 @@ async function connectToDatabase() {
 connectToDatabase();
 
 //Scrapping the data
-app.get('/scrape', async (req, res) => {
-  try {
-    let response = await axios.get(decodeURI(req.query.url));
-    const $ = cheerio.load(response.data);
-    const spanElement = $('span.B_NuCI');
-    const text = spanElement.text().trim();
-    const productData = {};
-    productData['name'] = text;
+app.get('/scrape', (req, res) => {
+  axios
+    .get(decodeURI(req.query.url))
+    .then((response) => {
+      const $ = cheerio.load(response.data);
+      const spanElement = $('span.B_NuCI');
+      const text = spanElement.text().trim();
+      const productData = {};
+      productData['name'] = text;
 
-    $('tr._1s_Smc.row').each((index, element) => {
-      const label = $(element).find('td._1hKmbr.col.col-3-12').text().trim();
-      const value = $(element)
-        .find('td.URwL2w.col.col-9-12 li._21lJbe')
-        .text()
-        .trim();
-      if (label.length > 0) {
-        productData[label] = value;
-      }
+      $('tr._1s_Smc.row').each((index, element) => {
+        const label = $(element).find('td._1hKmbr.col.col-3-12').text().trim();
+        const value = $(element)
+          .find('td.URwL2w.col.col-9-12 li._21lJbe')
+          .text()
+          .trim();
+        if (label.length > 0) {
+          productData[label] = value;
+        }
+      });
+
+      const priceElement = $('div._30jeq3._16Jk6d');
+      productData['Price'] = priceElement.text().trim();
+
+      const imgElements = $('img.q6DClP');
+      let srcArray = [];
+      imgElements.each((index, element) => {
+        const src = $(element).attr('src');
+        srcArray.push(src);
+      });
+      srcArray = [...new Set(srcArray)];
+
+      productData['Images'] = srcArray;
+
+      const collection = db.collection('labelblind');
+      collection.insertOne(productData);
+      res.sendStatus(200);
+    })
+    .catch((err) => {
+      console.log(err);
+      res.sendStatus(403);
     });
-
-    const priceElement = $('div._30jeq3._16Jk6d');
-    productData['Price'] = priceElement.text().trim();
-
-    const imgElements = $('img.q6DClP');
-    let srcArray = [];
-    imgElements.each((index, element) => {
-      const src = $(element).attr('src');
-      srcArray.push(src);
-    });
-    srcArray = [...new Set(srcArray)];
-
-    productData['Images'] = srcArray;
-
-    const collection = await db.collection('labelblind');
-    await collection.insertOne(productData);
-  } catch (err) {
-    res.sendStatus(403);
-  }
 });
 
 // API endpoint for retrieving scraped data
