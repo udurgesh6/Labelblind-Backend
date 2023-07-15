@@ -29,9 +29,7 @@ connectToDatabase();
 //Scrapping the data
 app.get('/scrape', async (req, res) => {
   try {
-    let response = await axios.get(
-      'https://www.flipkart.com/veeba-tomato-ketchup-chef-s-special/p/itm76af4f75b4780?pid=SAKG6Z58U9CEGTRD&lid=LSTSAKG6Z58U9CEGTRDFTOVSZ&marketplace=FLIPKART&store=eat&srno=b_1_5&otracker=browse&fm=organic&iid=4fc4fbe0-b40d-4b8d-9e4a-49399018cccf.SAKG6Z58U9CEGTRD.SEARCH&ppt=None&ppn=None&ssid=tcej8ll9io0000001689403454922'
-    );
+    let response = await axios.get(decodeURI(req.query.url));
     const $ = cheerio.load(response.data);
     const spanElement = $('span.B_NuCI');
     const text = spanElement.text().trim();
