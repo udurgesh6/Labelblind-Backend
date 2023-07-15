@@ -60,8 +60,8 @@ app.get('/scrape', async (req, res) => {
 
     productData['Images'] = srcArray;
 
-    const collection = db.collection('labelblind');
-    collection.insertOne(productData);
+    const collection = await db.collection('labelblind');
+    await collection.insertOne(productData);
   } catch (err) {
     res.sendStatus(403);
   }
